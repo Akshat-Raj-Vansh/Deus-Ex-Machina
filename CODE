@@ -1,0 +1,127 @@
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+#include "index.h" //HTML webpage to show Real Time Graphs
+
+#define EN1 D1
+#define EN2 D2
+#define TRIG D6    //Defining pins
+#define ECHO D7  
+
+const char* SSID = "YourHotspotNameWillComeHere";
+const char* PASSWORD = "YourHotspotPasswordWillComeHere";
+int lms = 1023, rms = 1023;
+String data = "";
+
+WiFiClient client;
+WiFiServer server1(85);
+ESP8266WebServer server(80); //Server for Real Time WebPage
+
+void handleRoot() {
+  String s = MAIN_page; //Read HTML contents
+  server.send(200, "text/html", s); //Loads Real Time WebPage
+}
+
+int ultrasonic() { //Finding distance using Ultrasonic Sensor
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(10);
+  int duration = pulseIn(ECHO, HIGH);
+  int distance = duration / 34 / 2;
+  Serial.println(distance);
+  return distance;
+}
+String speed_() { //Returns a string containing both speeds
+  int LS = map(lms, 400, 1023, 15, 150);
+  int RS = map(rms, 400, 1023, 15, 150);
+  return String(LS) + "#" + String(RS) + "%";
+}
+
+
+
+void handleADC() { //Handling web requests from WebPage
+  int a = ultrasonic();
+  String iR = speed_();
+  String adcValue = iR + String(a);
+  server.send(200, "text/plane", adcValue); //Send ADC value only to client ajax request
+}
+
+String checkClient (void) //Checks for any new requests
+{
+  while (!client.available()) delay(1);
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  client.flush();
+  return request;
+}
+
+void setup(void) {
+  Serial.begin(115200);
+  pinMode(EN1,OUTPUT);
+  pinMode(EN2,OUTPUT);
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  WiFi.begin(SSID, PASSWORD);     //Connect to your Device
+  Serial.println("");
+  server1.begin();
+   // Waiting for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  //If connection successful show IP address in serial monitor
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());  //IP address assigned to your ESP
+  server.on("/", handleRoot);      //Which routine to handle at root location. This is display page
+  server.on("/readADC", handleADC); //This page is called by java Script AJAX
+  server.begin(); //Start server
+  Serial.println("HTTP server started");
+}
+
+
+void loop(void) {
+  server.handleClient();
+  client = server1.available();
+  if (!client) {
+    return;
+  }
+  data = checkClient (); //Handle client requests
+  if (data.indexOf("forward") != -1)
+  {
+    lms = 1023;
+    rms = 1023;
+  }
+  else if (data.indexOf("backward") != -1)
+{
+  if (lms >= 500 && rms >= 500 && lms == rms)
+    { 
+lms = lms - 100;
+rms = rms - 100;
+    }
+    else if (rms > lms)
+      lms -= 100;
+    else if (lms > rms)
+      rms -= 100;
+    }
+  else if (data.indexOf("left") != -1)
+{
+  lms = 800;
+  rms = 1023;
+}
+else if (data.indexOf("right") != -1)
+{
+  rms = 800;
+  lms = 1023;
+}
+else if (data.indexOf("grip") != -1)
+{
+  rms = 0;
+  lms = 0;
+}
+analogWrite(EN1,rms);
+analogWrite(EN2,lms);
+}
