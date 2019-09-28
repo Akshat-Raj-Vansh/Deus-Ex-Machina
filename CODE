@@ -14,7 +14,7 @@ int lms = 1023, rms = 1023;
 String data = "";
 
 WiFiClient client;
-WiFiServer server1(85);
+WiFiServer server1(81);
 ESP8266WebServer server(80); //Server for Real Time WebPage
 
 void handleRoot() {
