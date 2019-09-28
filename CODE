@@ -89,7 +89,11 @@ void loop(void) {
   if (!client) {
     return;
   }
-  data = checkClient (); //Handle client requests
+  data = checkClient (); 
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:text/html");
+  client.println();
+  //Handle client requests
   if (data.indexOf("forward") != -1)
   {
     lms = 1023;
