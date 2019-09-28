@@ -8,8 +8,8 @@
 #define TRIG D6    //Defining pins
 #define ECHO D7  
 
-const char* SSID = "YourHotspotNameWillComeHere";
-const char* PASSWORD = "YourHotspotPasswordWillComeHere";
+const char* ssid = "YourHotspotNameWillComeHere";
+const char* password = "YourHotspotPasswordWillComeHere";
 int lms = 1023, rms = 1023;
 String data = "";
 
@@ -62,7 +62,7 @@ void setup(void) {
   pinMode(EN2,OUTPUT);
   pinMode(TRIG, OUTPUT);
   pinMode(ECHO, INPUT);
-  WiFi.begin(SSID, PASSWORD);     //Connect to your Device
+  WiFi.begin(ssid, password);     //Connect to your Device
   Serial.println("");
   server1.begin();
    // Waiting for connection
@@ -73,7 +73,7 @@ void setup(void) {
   //If connection successful show IP address in serial monitor
   Serial.println("");
   Serial.print("Connected to ");
-  Serial.println(SSID);
+  Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());  //IP address assigned to your ESP
   server.on("/", handleRoot);      //Which routine to handle at root location. This is display page
