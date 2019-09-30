@@ -28,7 +28,7 @@ int ultrasonic() { //Finding distance using Ultrasonic Sensor
   digitalWrite(TRIG, LOW);
   delayMicroseconds(10);
   int duration = pulseIn(ECHO, HIGH);
-  int distance = duration / 34 / 2;
+  int distance = duration * 0.034 / 2;
   Serial.println(distance);
   return distance;
 }
